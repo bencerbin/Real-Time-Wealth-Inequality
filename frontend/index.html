@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Wealth Inequality</title>
+  <link rel="stylesheet" href="style.css">
+
+   <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js">
+</script>  
+  
+</head>
+<body>
+
+  <div class="hero">
+    <div class="overlay"></div>
+
+    <div class="content">
+      <h1 class="title">AMERICAN BILLIONAIRES</h1>
+
+      <p class="subtitle">
+        have gained this much wealth<br>
+        since you opened this page
+      </p>
+
+      <div id="counter">$0</div>
+
+      <p class="subtitle">
+        and over the past year 
+      </p>
+       <div id="counter2">$0</div>
+       <!-- <p class="subtitle">
+        over the past year
+      </p> -->
+
+      <p class="footnote">
+        Based on real-time estimates of the top 400
+      </p>
+    </div>
+
+    <div class="scroll-indicator" id="scroll-indicator" aria-hidden="true"></div>
+  </div>
+
+  <div class="scroll-buffer" aria-hidden="true"></div>
+
+  <section class="reveal-section" id="reveal-section">
+    <h2 class="reveal-text" id="reveal-text">that's astronomically wealthy</h2>
+  </section>
+
+  <section style="padding-top: 20rem"class="comparison-section" id="comparison-section">
+    <div class="comparison-copy">
+      <p class="comparison-label">wealth comparison</p>
+      <h3 class="comparison-title">939 American billionaires versus 171,250,000 Americans</h3>
+      <p class="comparison-readout" id="comparison-readout">loading comparison...</p>
+    </div>
+
+    <div class="comparison-scene" id="comparison-scene" aria-label="3D wealth comparison"></div>
+  </section>
+
+  <script src="main.js"></script>
+   <script src="background.js"></script>
+  <script src="comparison.js"></script>
+</body>
+</html>
