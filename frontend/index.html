@@ -46,16 +46,31 @@
     <h2 class="reveal-text" id="reveal-text">that's astronomically wealthy</h2>
   </section>
 
-  <section style="padding-top: 20rem"class="comparison-section" id="comparison-section">
+  <section class="comparison-section" id="comparison-section">
     <div class="comparison-copy">
       <p class="comparison-label">wealth comparison</p>
-      <h3 class="comparison-title">939 American billionaires versus 171,250,000 Americans</h3>
+      <h3 class="comparison-title">939 American billionaires versus The Bottom 50%</h3>
       <p class="comparison-readout" id="comparison-readout">loading comparison...</p>
+      <div class="comparison-controls" role="group" aria-label="Planet visibility controls">
+        <label class="planet-toggle">
+          <input type="checkbox" id="toggle-billionaires" checked>
+          <span>Billionaires</span>
+        </label>
+        <label class="planet-toggle">
+          <input type="checkbox" id="toggle-americans" checked>
+          <span>171,250,000 Americans (50%)</span>
+        </label>
+        <label class="planet-toggle">
+          <input type="checkbox" id="toggle-sample" checked>
+          <span>939 Americans</span>
+        </label>
+      </div>
     </div>
 
     <div class="comparison-scene" id="comparison-scene" aria-label="3D wealth comparison"></div>
   </section>
 
+  
   <script src="main.js"></script>
    <script src="background.js"></script>
   <script src="comparison.js"></script>

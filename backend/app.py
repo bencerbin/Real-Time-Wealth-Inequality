@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 from services.fetchbillionaires import fetch_billionaires
 import time
@@ -7,6 +7,7 @@ import os
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
+FRONTEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend"))
 
 CACHE_DIR = os.path.join(os.path.dirname(__file__), "data")
 CACHE_FILE = os.path.join(CACHE_DIR, "cache.json")
@@ -98,6 +99,19 @@ def get_billionaires():
             return jsonify(cache["data"])
 
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/")
+def serve_index():
+    return send_from_directory(FRONTEND_DIR, "index.html")
+
+
+@app.route("/<path:path>")
+def serve_frontend_asset(path):
+    asset_path = os.path.join(FRONTEND_DIR, path)
+    if os.path.isfile(asset_path):
+      return send_from_directory(FRONTEND_DIR, path)
+    return send_from_directory(FRONTEND_DIR, "index.html")
 
 if __name__ == "__main__":
     app.run(debug=True)

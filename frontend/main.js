@@ -32,6 +32,7 @@ fetch("http://127.0.0.1:5000/api/billionaires")
   .then(data => {
     let totalDelta = 0;
     let yearDelta = 0;
+    let totalWealth = 0;
 
     data.forEach(p => {
       if (typeof p.delta === "number") totalDelta += p.delta;
