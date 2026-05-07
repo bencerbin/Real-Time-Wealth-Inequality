@@ -1,4 +1,9 @@
 (() => {
+  const API_BASE_URLS = window.__API_BASE_URLS__ || (
+    window.location.protocol === "file:" || window.location.port === "5501"
+      ? ["http://127.0.0.1:5001", "http://127.0.0.1:5000"]
+      : [window.location.origin]
+  );
   const comparisonContainer = document.getElementById("comparison-scene");
   const comparisonReadout = document.getElementById("comparison-readout");
   const toggleBillionaires = document.getElementById("toggle-billionaires");
@@ -241,6 +246,25 @@
       : value.toLocaleString(undefined, { maximumFractionDigits: 2 });
   }
 
+  async function fetchJson(path) {
+    let lastError = null;
+
+    for (const baseUrl of API_BASE_URLS) {
+      try {
+        const response = await fetch(`${baseUrl}${path}`);
+        if (!response.ok) {
+          throw new Error(`Request failed with ${response.status}`);
+        }
+
+        return await response.json();
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    throw lastError || new Error("Failed to fetch data");
+  }
+
   function radiusScaleFor(wealth) {
     return Math.cbrt(wealth / billionaireWealth);
   }
@@ -442,8 +466,7 @@
   syncScene();
   animateComparison();
 
-  fetch("http://127.0.0.1:5000/api/billionaires")
-    .then(res => res.json())
+  fetchJson("/api/billionaires")
     .then(data => {
       billionaireWealth = data.reduce((sum, person) => sum + (person.wealth || 0), 0);
       syncScene();

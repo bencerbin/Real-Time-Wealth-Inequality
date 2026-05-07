@@ -3,6 +3,11 @@ let perSecond = 0;
 let yearValue = 0;
 let totalWealth = 0;
 let lastFrameTime = performance.now();
+const API_BASE_URLS = window.__API_BASE_URLS__ || (
+  window.location.protocol === "file:" || window.location.port === "5501"
+    ? ["http://127.0.0.1:5001", "http://127.0.0.1:5000"]
+    : [window.location.origin]
+);
 const revealText = document.getElementById("reveal-text");
 const revealSection = document.getElementById("reveal-section");
 const scrollIndicator = document.getElementById("scroll-indicator");
@@ -27,8 +32,26 @@ function updateReveal() {
   }
 }
 
-fetch("http://127.0.0.1:5000/api/billionaires")
-  .then(res => res.json())
+async function fetchJson(path) {
+  let lastError = null;
+
+  for (const baseUrl of API_BASE_URLS) {
+    try {
+      const response = await fetch(`${baseUrl}${path}`);
+      if (!response.ok) {
+        throw new Error(`Request failed with ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError || new Error("Failed to fetch data");
+}
+
+fetchJson("/api/billionaires")
   .then(data => {
     let totalDelta = 0;
     let yearDelta = 0;

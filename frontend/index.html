@@ -70,9 +70,119 @@
     <div class="comparison-scene" id="comparison-scene" aria-label="3D wealth comparison"></div>
   </section>
 
+  <section class="explorer-section" id="explorer-section">
+    <div class="explorer-intro">
+      <p class="comparison-label">billionaire explorer</p>
+      <h3 class="explorer-title">Search, sort, and inspect the people behind the numbers</h3>
+      <p class="explorer-copy">
+        Filter the full billionaire dataset by name, industry, residence, or wealth, then pick any person to see a quick facts card.
+      </p>
+    </div>
+
+    <div class="explorer-toolbar">
+      <label class="filter-field">
+        <span>Search</span>
+        <input id="explorer-search" type="search" placeholder="Search names, quotes, facts...">
+      </label>
+
+      <label class="filter-field">
+        <span>Industry</span>
+        <select id="explorer-industry">
+          <option value="">All industries</option>
+        </select>
+      </label>
+
+      <label class="filter-field">
+        <span>State / country</span>
+        <select id="explorer-state">
+          <option value="">All states and countries</option>
+        </select>
+      </label>
+
+      <label class="filter-field">
+        <span>Min wealth (billions)</span>
+        <input id="explorer-min-wealth" type="number" min="0" step="1" placeholder="0">
+      </label>
+
+      <label class="filter-field">
+        <span>Max wealth (billions)</span>
+        <input id="explorer-max-wealth" type="number" min="0" step="1" placeholder="No cap">
+      </label>
+
+      <label class="filter-field">
+        <span>Rank by</span>
+        <select id="explorer-sort">
+          <option value="wealth">Wealth</option>
+          <option value="name">Name</option>
+          <option value="industry">Industry</option>
+          <option value="state">State</option>
+          <option value="residence">Residence</option>
+          <option value="philanthropy_score">Philanthropy score</option>
+          <option value="self_made_score">Self-made score</option>
+        </select>
+      </label>
+
+      <button class="sort-direction" id="explorer-order" type="button" aria-label="Toggle sort order">
+        Highest first
+      </button>
+    </div>
+
+    <div class="explorer-layout">
+      <aside class="explorer-list-pane" aria-label="Billionaire list">
+        <div class="explorer-list-head">
+          <span id="explorer-count">Loading billionaire records...</span>
+          <button class="clear-filters" id="explorer-clear" type="button">Clear filters</button>
+        </div>
+        <div class="explorer-list" id="explorer-list"></div>
+      </aside>
+
+      <article class="facts-card" id="facts-card" aria-live="polite">
+        <div class="facts-card-hero">
+          <img id="facts-image" alt="" />
+          <div class="facts-card-header">
+            <p class="facts-card-kicker">Billionaire facts card</p>
+            <h4 id="facts-name">Pick a billionaire</h4>
+            <p id="facts-residence" class="facts-card-location">Select someone from the list to inspect their profile.</p>
+          </div>
+        </div>
+
+        <div class="facts-grid">
+          <div class="facts-item">
+            <span>Wealth</span>
+            <strong id="facts-wealth">--</strong>
+          </div>
+          <div class="facts-item">
+            <span>Industry</span>
+            <strong id="facts-industry">--</strong>
+          </div>
+          <div class="facts-item">
+            <span>Philanthropy score</span>
+            <strong id="facts-philanthropy">--</strong>
+          </div>
+          <div class="facts-item">
+            <span>Self-made score</span>
+            <strong id="facts-self-made">--</strong>
+          </div>
+        </div>
+
+        <div class="facts-quote-wrap">
+          <p class="facts-quote-label">Quote</p>
+          <p id="facts-quote" class="facts-quote">A selected billionaire's quote will appear here.</p>
+        </div>
+
+        <div class="facts-years-wrap">
+          <p class="facts-years-label">At $67,000/year</p>
+          <div id="facts-years" class="facts-years-value">-- years</div>
+          <p class="facts-years-caption">to earn this amount</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
   
   <script src="main.js"></script>
-   <script src="background.js"></script>
+  <script src="background.js"></script>
   <script src="comparison.js"></script>
+  <script src="explorer.js"></script>
 </body>
 </html>
