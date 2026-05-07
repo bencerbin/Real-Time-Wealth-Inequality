@@ -122,9 +122,22 @@
         </select>
       </label>
 
-      <button class="sort-direction" id="explorer-order" type="button" aria-label="Toggle sort order">
+        <button class="sort-direction" id="explorer-order" type="button" aria-label="Toggle sort order">
         Highest first
       </button>
+    </div>
+
+    <div class="comparison-lookup" aria-label="Billionaire lookup">
+      <label class="lookup-field">
+        <span>Lookup billionaire</span>
+        <input id="comparison-lookup-input" type="search" placeholder="Type a name to add a planet" autocomplete="off">
+      </label>
+      <div class="lookup-actions">
+        <button class="lookup-button" id="comparison-lookup-add" type="button" disabled>Add planet</button>
+        <button class="lookup-button is-secondary" id="comparison-lookup-remove" type="button" disabled>Remove planet</button>
+      </div>
+      <div class="comparison-lookup-results" id="comparison-lookup-results" aria-live="polite"></div>
+      <div class="comparison-lookup-active" id="comparison-lookup-active">No lookup billionaire added yet.</div>
     </div>
 
     <div class="explorer-layout">

@@ -9,6 +9,11 @@
   const toggleBillionaires = document.getElementById("toggle-billionaires");
   const toggleAmericans = document.getElementById("toggle-americans");
   const toggleSample = document.getElementById("toggle-sample");
+  const lookupInput = document.getElementById("comparison-lookup-input");
+  const lookupAddButton = document.getElementById("comparison-lookup-add");
+  const lookupRemoveButton = document.getElementById("comparison-lookup-remove");
+  const lookupResults = document.getElementById("comparison-lookup-results");
+  const lookupActive = document.getElementById("comparison-lookup-active");
 
   if (
     !comparisonContainer ||
@@ -16,6 +21,11 @@
     !toggleBillionaires ||
     !toggleAmericans ||
     !toggleSample ||
+    !lookupInput ||
+    !lookupAddButton ||
+    !lookupRemoveButton ||
+    !lookupResults ||
+    !lookupActive ||
     typeof THREE === "undefined"
   ) {
     return;
@@ -64,6 +74,7 @@
       billionaires: ["#5b2d0e", "#8b4514", "#f7931a", "#ffd08a"],
       americans: ["#22313a", "#5b717b", "#b5c2c8", "#edf2f4"],
       sample: ["#3f4a32", "#72815c", "#b8b091", "#f0e5c9"],
+      lookup: ["#26130a", "#714111", "#f7931a", "#ffe0a8"],
     };
     const palette = palettes[key];
 
@@ -100,6 +111,7 @@
     billionaires: makeCanvasTexture("billionaires"),
     americans: makeCanvasTexture("americans"),
     sample: makeCanvasTexture("sample"),
+    lookup: makeCanvasTexture("lookup"),
   };
 
   const materials = {
@@ -113,6 +125,10 @@
     }),
     sample: new THREE.MeshBasicMaterial({
       map: textures.sample,
+      color: 0xffffff,
+    }),
+    lookup: new THREE.MeshBasicMaterial({
+      map: textures.lookup,
       color: 0xffffff,
     }),
   };
@@ -142,7 +158,12 @@
   const billionaireFallbackWealth = 4250000000000;
   const americansWealth = 4250000000000;
   const sampleWealth = 939 * 192000;
+  const BILLION = 1_000_000_000;
   let billionaireWealth = billionaireFallbackWealth;
+  let lookupPeople = [];
+  let lookupQuery = "";
+  let lookupCandidate = null;
+  let lookupPerson = null;
 
   const baseRadius = 2.0;
   const planets = {
@@ -168,6 +189,14 @@
       wealth: () => sampleWealth,
       minHaloScale: 0.2,
     }),
+    lookup: createPlanet({
+      key: "lookup",
+      label: "Lookup billionaire",
+      material: materials.lookup,
+      population: 1,
+      wealth: () => lookupPerson ? Number(lookupPerson.wealth || 0) * BILLION : billionaireFallbackWealth,
+      minHaloScale: 0.12,
+    }),
   };
 
   const raycaster = new THREE.Raycaster();
@@ -191,7 +220,7 @@
     const halo = new THREE.Mesh(
       new THREE.SphereGeometry(baseRadius * 1.24, 40, 40),
       new THREE.MeshBasicMaterial({
-        color: key === "billionaires" ? 0xf7931a : key === "americans" ? 0xd8f2ff : 0x9edcff,
+        color: key === "billionaires" ? 0xf7931a : key === "americans" ? 0xd8f2ff : key === "lookup" ? 0xf7931a : 0x9edcff,
         transparent: true,
         opacity: 0,
         blending: THREE.AdditiveBlending,
@@ -240,10 +269,120 @@
     return `$${Math.round(value).toLocaleString()}`;
   }
 
+  function formatBillions(value) {
+    if (value == null || Number.isNaN(value)) return "--";
+
+    const text = Number(value).toFixed(1);
+    return `${text.replace(/\.0$/, "")}B`;
+  }
+
   function formatRatio(value) {
     return value >= 10
       ? value.toLocaleString(undefined, { maximumFractionDigits: 0 })
       : value.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  }
+
+  function normalize(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  function lookupMatches(person) {
+    const haystack = normalize([
+      person.name,
+      person.id,
+      person.industry,
+      person.residence,
+      person.state,
+      person.country,
+      person.quote,
+      ...(person.about || []),
+    ].join(" "));
+
+    return !lookupQuery || haystack.includes(lookupQuery);
+  }
+
+  function setLookupCandidate(person) {
+    lookupCandidate = person || null;
+    lookupAddButton.disabled = !lookupCandidate;
+
+    if (lookupCandidate) {
+      lookupActive.textContent = `${lookupCandidate.name} selected. Press Add planet to place it in the visualization.`;
+    } else if (lookupPerson) {
+      lookupActive.textContent = `${lookupPerson.name} is added to the visualization.`;
+    } else {
+      lookupActive.textContent = "No lookup billionaire added yet.";
+    }
+
+    renderLookupResults();
+  }
+
+  function updateLookupState(person) {
+    lookupPerson = person || null;
+
+    if (lookupPerson) {
+      planets.lookup.label = lookupPerson.name;
+      lookupActive.textContent = `${lookupPerson.name} is added to the visualization.`;
+      lookupRemoveButton.disabled = false;
+      lookupAddButton.textContent = lookupCandidate && lookupCandidate.id !== lookupPerson.id ? "Replace planet" : "Add planet";
+    } else {
+      planets.lookup.label = "Lookup billionaire";
+      lookupActive.textContent = "No lookup billionaire added yet.";
+      lookupRemoveButton.disabled = true;
+      lookupAddButton.textContent = "Add planet";
+    }
+
+    syncScene();
+    renderLookupResults();
+  }
+
+  function renderLookupResults() {
+    lookupQuery = normalize(lookupInput.value);
+
+    const matches = lookupPeople
+      .filter(lookupMatches)
+      .slice(0, 6);
+
+    lookupResults.innerHTML = "";
+
+    if (!matches.length) {
+      const empty = document.createElement("div");
+      empty.className = "lookup-empty";
+      empty.textContent = lookupQuery ? "No matching billionaires found." : "Start typing to find a billionaire.";
+      lookupResults.appendChild(empty);
+      lookupAddButton.disabled = true;
+      return;
+    }
+
+    lookupAddButton.disabled = !lookupCandidate && !matches.length;
+
+    matches.forEach(person => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `lookup-result${lookupCandidate?.id === person.id ? " is-active" : ""}`;
+      button.innerHTML = `
+        <strong>${person.name}</strong>
+        <span>${formatBillions(person.wealth)}</span>
+        <em>${person.industry || "Industry unknown"}</em>
+      `;
+      button.addEventListener("click", () => setLookupCandidate(person));
+      lookupResults.appendChild(button);
+    });
+  }
+
+  function commitTopLookupResult() {
+    const match = lookupCandidate || lookupPeople.filter(lookupMatches)[0] || null;
+    if (match) {
+      updateLookupState(match);
+    }
+  }
+
+  function selectedKeys() {
+    return [
+      { key: "billionaires", checked: toggleBillionaires.checked },
+      { key: "americans", checked: toggleAmericans.checked },
+      { key: "sample", checked: toggleSample.checked },
+      { key: "lookup", checked: Boolean(lookupPerson) },
+    ].filter(({ checked }) => checked).map(({ key }) => key);
   }
 
   async function fetchJson(path) {
@@ -269,17 +408,13 @@
     return Math.cbrt(wealth / billionaireWealth);
   }
 
-  function selectedKeys() {
-    return [
-      { key: "billionaires", checked: toggleBillionaires.checked },
-      { key: "americans", checked: toggleAmericans.checked },
-      { key: "sample", checked: toggleSample.checked },
-    ].filter(({ checked }) => checked).map(({ key }) => key);
-  }
-
   function updateScales() {
     Object.values(planets).forEach(planet => {
-      const scale = planet.key === "billionaires" ? 1 : radiusScaleFor(planet.wealth());
+      const scale = planet.key === "billionaires"
+        ? 1
+        : planet.key === "lookup"
+          ? (lookupPerson ? radiusScaleFor(planet.wealth()) : 0.0001)
+          : radiusScaleFor(planet.wealth());
       planet.mesh.scale.setScalar(scale);
       planet.halo.scale.setScalar(Math.max(scale, planet.minHaloScale));
       planet.hitArea.scale.setScalar(Math.max(scale, 0.18));
@@ -290,8 +425,14 @@
     const keys = selectedKeys();
     const positionsByCount = {
       1: [0],
-      2: [-2.2, 2,2],
+      2: [-2.2, 2.2],
       3: [-3.8, 0, 3.8],
+    };
+    const fourPlanetPositions = {
+      billionaires: { x: -2.7, y: 1.6 },
+      americans: { x: 2.7, y: 1.6 },
+      sample: { x: -2.7, y: -1.55 },
+      lookup: { x: 2.7, y: -1.55 },
     };
 
     Object.values(planets).forEach(planet => {
@@ -312,11 +453,15 @@
     }
 
     keys.forEach((key, index) => {
-      const x = positionsByCount[keys.length][index];
-      const y = key === "billionaires" ? 0.4 : key === "americans" ? -0.25 : -1.05;
+      const point = keys.length === 4
+        ? fourPlanetPositions[key]
+        : {
+            x: positionsByCount[keys.length][index],
+            y: key === "billionaires" ? 0.4 : key === "americans" ? -0.25 : key === "sample" ? -1.05 : 0.95,
+          };
       const planet = planets[key];
 
-      planet.mesh.position.set(x, y, 0);
+      planet.mesh.position.set(point.x, point.y, 0);
       planet.halo.position.copy(planet.mesh.position);
       planet.hitArea.position.copy(planet.mesh.position);
     });
@@ -329,9 +474,14 @@
   }
 
   function updateReadout() {
+    const lookupWealth = lookupPerson ? Number(lookupPerson.wealth || 0) * BILLION : 0;
+    const lookupText = lookupPerson
+      ? ` Lookup billionaire vs billionaires: ${formatRatio(billionaireWealth / lookupWealth)}:1.`
+      : "";
+
     comparisonReadout.textContent =
       `Billionaires vs 171,250,000 Americans: ${formatRatio(billionaireWealth / americansWealth)}:1. ` +
-      `Billionaires vs 939 Americans: ${formatRatio(billionaireWealth / sampleWealth)}:1.`;
+      `Billionaires vs 939 Americans: ${formatRatio(billionaireWealth / sampleWealth)}:1.${lookupText}`;
   }
 
   function updateCameraTarget() {
@@ -356,7 +506,10 @@
     cameraTarget.set(
       0,
       0,
-      Math.max(13, 10.5 + largestVisibleRadius * (keys.length === 1 ? 2.5 : 2.1))
+      Math.max(
+        13,
+        10.5 + largestVisibleRadius * (keys.length === 1 ? 2.6 : keys.length === 2 ? 2.35 : keys.length === 3 ? 2.1 : 2.5) + (keys.length === 4 ? 4.4 : (keys.length - 1) * 1.15)
+      )
     );
   }
 
@@ -462,17 +615,54 @@
     renderer.domElement.style.cursor = "default";
   });
   renderer.domElement.addEventListener("click", handleClick);
+  lookupInput.addEventListener("input", () => {
+    lookupCandidate = null;
+    renderLookupResults();
+  });
+  lookupInput.addEventListener("focus", renderLookupResults);
+  lookupInput.addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      commitTopLookupResult();
+    }
+  });
+  lookupAddButton.addEventListener("click", commitTopLookupResult);
+  lookupRemoveButton.addEventListener("click", () => {
+    lookupCandidate = null;
+    updateLookupState(null);
+    renderLookupResults();
+  });
 
   syncScene();
   animateComparison();
 
-  fetchJson("/api/billionaires")
-    .then(data => {
-      billionaireWealth = data.reduce((sum, person) => sum + (person.wealth || 0), 0);
+  Promise.allSettled([
+    fetchJson("/api/billionaires"),
+    fetchJson("/api/billionaires/details?limit=5000&sort=wealth&order=desc"),
+  ])
+    .then(([summaryResult, detailResult]) => {
+      if (summaryResult.status === "fulfilled") {
+        billionaireWealth = summaryResult.value.reduce((sum, person) => sum + (person.wealth || 0), 0);
+      }
+
+      if (detailResult.status === "fulfilled") {
+        lookupPeople = Array.isArray(detailResult.value.results)
+          ? detailResult.value.results
+          : (Array.isArray(detailResult.value) ? detailResult.value : []);
+        lookupCandidate = null;
+      }
+
+      renderLookupResults();
       syncScene();
-    })
-    .catch(err => {
-      console.error("Failed to load comparison data:", err);
-      comparisonReadout.textContent = "Unable to load live comparison data. Showing fallback values.";
+
+      if (summaryResult.status === "rejected") {
+        comparisonReadout.textContent = "Unable to load live comparison data. Showing fallback values.";
+      }
+
+      if (detailResult.status === "rejected") {
+        console.error("Failed to load lookup data:", detailResult.reason);
+        lookupResults.innerHTML = '<div class="lookup-empty">Lookup data could not be loaded right now.</div>';
+        lookupAddButton.disabled = true;
+      }
     });
 })();
